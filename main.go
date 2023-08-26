@@ -2,37 +2,24 @@ package main
 
 import (
 	"fmt"
+	"gogo/config"
 	"io"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	"gopkg.in/gomail.v2"
 )
 
-func init() {
+var MailtrapUser string
+var MailtrapPassword string
 
-	if err := godotenv.Load(); err != nil {
-		log.Print("No .env file found")
-	}
+func init() {
+	config.SetEnv()
+	MailtrapUser = config.ApiConfig.Mailtraps[0].User
+	MailtrapPassword = config.ApiConfig.Mailtraps[0].Password
 }
 
 func main() {
-
-	// Get the MAILTRAP_USERNAME environment variable
-	mailtrapUsername, exists := os.LookupEnv("MAILTRAP_USERNAME")
-	fmt.Println(mailtrapUsername)
-	if !exists {
-		fmt.Println("no username")
-	}
-
-	// Get the GITHUB_API_KEY environment variable
-	mailtrapPassword, exists := os.LookupEnv("MAILTRAP_PASSWORD")
-
-	if !exists {
-		fmt.Println("no password")
-	}
-
+	fmt.Println(MailtrapUser, MailtrapPassword)
 	m := gomail.NewMessage()
 	m.SetHeader("From", "alex@example.com")
 	m.SetHeader("To", "bob@example.com", "cora@example.com")
@@ -41,8 +28,8 @@ func main() {
 	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
 
 	s := io.WriterTo(m)
+	d := gomail.NewDialer("sandbox.smtp.mailtrap.io", 2525, MailtrapUser, MailtrapPassword)
 
-	d := gomail.NewDialer("sandbox.smtp.mailtrap.io", 2525, mailtrapUsername, mailtrapPassword)
 	conn, err := d.Dial()
 	if err != nil {
 		log.Fatal(err)
